@@ -5,6 +5,7 @@
 # copyright: 2012
 
 package Stackrad;
+use Mo qw'build builder';
 use Curses::UI 0.9609;
 use LWP::UserAgent 6.04;
 use HTTP::Request 6.00;
@@ -12,10 +13,13 @@ use JSON::XS 2.32;
 use YAML;
 our $VERSION = '0.10';
 
+has 'cui';
+has 'texteditor';
+
 sub new {
     my $class = shift;
     my $self = bless {}, $class;
-    $self->{cui} = Curses::UI->new(-color_support => 1);
+    $self->cui(Curses::UI->new(-color_support => 1));
     my $exit_sub = sub { $self->exit_dialog };
     my @menu = (
       {
@@ -41,8 +45,7 @@ sub new {
 
     my $info = $self->info;
 
-    my $texteditor = $self->{win1}->add("text", "TextEditor", -text => $info);
-    $self->{texteditor} = $texteditor;
+    $self->texteditor($self->{win1}->add("text", "TextEditor", -text => $info));
 
     $self->cui->set_binding(sub {$menu->focus()}, "\cX");
     $self->cui->set_binding($exit_sub, "\cQ");
@@ -50,8 +53,6 @@ sub new {
 
     $self
 }
-
-sub cui { my $self = shift; $self->{cui} } # XXX Mo me.
 
 sub info {
     my $self = shift;
@@ -63,9 +64,12 @@ sub info {
 
 sub get {
     my ($self, $path) = @_;
-    warn "Stackrad being lazy and disabling SSL cert verification!";
-    $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
     my $ua = LWP::UserAgent->new(agent => $self->agent_string);
+    warn "Stackrad being lazy and disabling SSL cert verification!";
+    $ua->ssl_opts(
+        verify_hostname => 0,
+        #? SSL_ca_path => '/app/fs/pair/certcert/stackato.ddns.us.pem',
+    );
     my $server = $self->{target}; 
     my $request = HTTP::Request->new('GET', 'https://'.$server.$path);
     $request->header('Accept' => 'application/json');
@@ -81,7 +85,7 @@ sub agent_string {
 
 sub run {
     my $self = shift;
-    $self->{texteditor}->focus();
+    $self->texteditor->focus();
     $self->cui->mainloop();
 }
 
