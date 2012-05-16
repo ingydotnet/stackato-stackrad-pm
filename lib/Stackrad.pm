@@ -11,7 +11,7 @@ our $VERSION = '0.10';
 our $cui; # XXX global hack for exit_dialog()
 sub new {
     my $class = shift;
-    my $self = {};
+    my $self = bless {}, $class;
     $self->{cui} = Curses::UI->new(-color_support => 1);
     $cui = $self->{cui};
     my @menu = (
@@ -20,34 +20,35 @@ sub new {
         -submenu => [ { -label => 'Exit      ^Q', -value => \&exit_dialog  } ]
       },
     );
-    my $menu = $cui->add(
+    my $menu = $self->cui->add(
             'menu','Menubar', 
             -menu => \@menu,
             -fg  => "blue",
     );
 
-    my $win1 = $cui->add(
+    my $win1 = $self->cui->add(
          'win1', 'Window',
          -border => 1,
          -y    => 1,
-         -bfg  => 'red',
+         -bfg  => 'green',
     );
 
     my $texteditor = $win1->add(
         "text", "TextEditor", -text => "Here is some text\n" . "And some more");
     $self->{texteditor} = $texteditor;
 
-    $cui->set_binding(sub {$menu->focus()}, "\cX");
-    $cui->set_binding(\&exit_dialog , "\cQ");
+    $self->cui->set_binding(sub {$menu->focus()}, "\cX");
+    $self->cui->set_binding(\&exit_dialog , "\cQ");
 
-    bless $self, $class;
+    $self
 }
+
+sub cui { my $self = shift; $self->{cui} } # XXX Mo me.
 
 sub run {
     my $self = shift;
-    warn "hiho\n";
     $self->{texteditor}->focus();
-    $self->{cui}->mainloop();
+    $self->cui->mainloop();
 }
 
 sub exit_dialog()
