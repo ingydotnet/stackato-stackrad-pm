@@ -6,6 +6,10 @@
 
 package Stackrad;
 use Curses::UI 0.9609;
+use LWP::UserAgent 6.04;
+use HTTP::Request 6.00;
+use JSON::XS 2.32;
+use YAML;
 our $VERSION = '0.10';
 
 sub new {
@@ -35,17 +39,45 @@ sub new {
          -title  => $self->{target},
     );
 
-    my $texteditor = $self->{win1}->add(
-        "text", "TextEditor", -text => "Here is some text\n" . "And some more");
+    my $info = $self->info;
+
+    my $texteditor = $self->{win1}->add("text", "TextEditor", -text => $info);
     $self->{texteditor} = $texteditor;
 
     $self->cui->set_binding(sub {$menu->focus()}, "\cX");
     $self->cui->set_binding($exit_sub, "\cQ");
+    $self->cui->set_binding(sub {exit 0}, "\cC");
 
     $self
 }
 
 sub cui { my $self = shift; $self->{cui} } # XXX Mo me.
+
+sub info {
+    my $self = shift;
+    my $response = $self->get('/info/');
+    return "Request error: " . YAML::Dump($response)
+        unless $response->is_success; 
+    YAML::Dump(decode_json($response->content))
+}
+
+sub get {
+    my ($self, $path) = @_;
+    warn "Stackrad being lazy and disabling SSL cert verification!";
+    $ENV{PERL_LWP_SSL_VERIFY_HOSTNAME} = 0;
+    my $ua = LWP::UserAgent->new(agent => $self->agent_string);
+    my $server = $self->{target}; 
+    my $request = HTTP::Request->new('GET', 'https://'.$server.$path);
+    $request->header('Accept' => 'application/json');
+    warn YAML::Dump($request);
+    #? cookies?
+    #? $request->header( 'Content-Type' => $p{type} )     if $p{type};
+    $ua->simple_request($request)
+}
+
+sub agent_string {
+    'Stackrad ... UserAgent is a TODO';
+}
 
 sub run {
     my $self = shift;
