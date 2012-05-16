@@ -1,0 +1,7 @@
+Target: api.stackato.ddns.us
+
+- Add debugging trace stuff
+- Remove SSL hacks (and figure out what's up with /home/andreask/dbn/BuildTmp/OpenSSL/linux-glibc2.3-x86_64/install/ssl/cert.pem )
+- Other actions
+- Automatic feature comparison? (e.g., check against `s`)
+- …more.
