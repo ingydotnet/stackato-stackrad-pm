@@ -8,16 +8,15 @@ package Stackrad;
 use Curses::UI 0.9609;
 our $VERSION = '0.10';
 
-our $cui; # XXX global hack for exit_dialog()
 sub new {
     my $class = shift;
     my $self = bless {}, $class;
     $self->{cui} = Curses::UI->new(-color_support => 1);
-    $cui = $self->{cui};
+    my $exit_sub = sub { $self->exit_dialog };
     my @menu = (
       {
         -label => 'File', 
-        -submenu => [ { -label => 'Exit      ^Q', -value => \&exit_dialog  } ]
+        -submenu => [ { -label => 'Exit    ^Q', -value => $exit_sub } ],
       },
     );
     my $menu = $self->cui->add(
@@ -26,19 +25,22 @@ sub new {
             -fg  => "blue",
     );
 
-    my $win1 = $self->cui->add(
+    $self->{target} = $self->cui->question("Target?");
+
+    $self->{win1} = $self->cui->add(
          'win1', 'Window',
          -border => 1,
-         -y    => 1,
-         -bfg  => 'green',
+         -y      => 1,
+         -bfg    => 'green',
+         -title  => $self->{target},
     );
 
-    my $texteditor = $win1->add(
+    my $texteditor = $self->{win1}->add(
         "text", "TextEditor", -text => "Here is some text\n" . "And some more");
     $self->{texteditor} = $texteditor;
 
     $self->cui->set_binding(sub {$menu->focus()}, "\cX");
-    $self->cui->set_binding(\&exit_dialog , "\cQ");
+    $self->cui->set_binding($exit_sub, "\cQ");
 
     $self
 }
@@ -51,9 +53,9 @@ sub run {
     $self->cui->mainloop();
 }
 
-sub exit_dialog()
-{
-    my $return = $cui->dialog(
+sub exit_dialog() {
+    my $self = shift;
+    my $return = $self->cui->dialog(
       -message   => "Do you really want to quit?",
       -title     => "Are you sure???", 
       -buttons   => ['yes', 'no'],
