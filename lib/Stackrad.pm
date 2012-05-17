@@ -2,55 +2,126 @@
 # name:      Stackrad
 # abstract:  Curses Client for Stackato
 # author:    Ingy döt Net <ingy@ingy.net>
+# license:   perl
 # copyright: 2012
 
 package Stackrad;
-use Mo qw'build builder';
-use Curses::UI 0.9609;
-use LWP::UserAgent 6.04;
-use HTTP::Request 6.00;
-use JSON::XS 2.32;
-use YAML;
+use Mo qw'build builder default';
+use Stackrad::State;
+use Curses::UI 0;
+use LWP::UserAgent 0;
+use HTTP::Request 0;
+use JSON::XS 0;
+use YAML::XS 0;
+use XXX;
 our $VERSION = '0.10';
 
-has 'cui';
-has 'texteditor';
+use constant menu_key_hint => '(Ctrl+x for menu)';
 
-sub new {
+has state => (default => sub { Stackrad::State->new });
+has title => (default => sub { '...no target yet... ' . menu_key_hint });
+has cui => (
+    default => sub {
+        my $self = shift;
+        $self->cui(Curses::UI->new(-color_support => 1))
+    },
+);
+has win1 => (
+    default => sub {
+        my $self = shift;
+        $self->cui->add('win1', 'Window',
+            -border => 1,
+            -y      => 1,
+            -bfg    => 'green',
+            -title  => $self->title,
+        );
+    }
+);
+has textviewer => ();
+
+sub run {
     my $class = shift;
-    my $self = bless {}, $class;
-    $self->cui(Curses::UI->new(-color_support => 1));
+    my $self = $class->new();
+    $self->setup();
+    $self->dispatch;
+    $self->textviewer->focus();
+    $self->cui->mainloop();
+}
 
-    $self->{target} = $self->cui->question("Target?");
-    
-    my $title = "Target: $self->{target} (Ctrl+x for menu)";
-
-    $self->{win1} = $self->cui->add(
-         'win1', 'Window',
-         -border => 1,
-         -y      => 1,
-         -bfg    => 'green',
-         -title  => $title,
-    );
-
-    my $info = $self->info;
-    $self->texteditor($self->{win1}->add("text", "TextEditor", -text => $info));
-
+sub setup {
+    my $self = shift;
     $self->build_menu;
-
     my $exit_sub = sub { $self->exit_dialog };
-    $self->cui->set_binding($exit_sub, "\cQ");
     $self->cui->set_binding(sub {exit 0}, "\cC");
+}
 
-    $self
+
+# - User types: stackrad
+# - User gets prompted for a target
+# - User goes to Overview Pane
+
+sub dispatch {
+    my $self = shift;
+    if (not $self->state->welcomed) {
+        $self->
+    my $point = $self->state->point;
+    my $method = "do_$point";
+    $self->$method;
+}
+
+sub do_welcome {
+    my $self = shift;
+    my $text = <<EOT;
+Welcome...
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+1
+2
+3
+4
+5
+6
+
+EOT
+    my $win = $self->cui->add('mywindow', 'Window',
+        -width => 50,
+        -height => 10,
+        -border => 1,
+        -centered => 1,
+        -vscrollbar => 1,
+    );
+    $win->add("text", "Dialog::Basic",
+        -message => $text
+    )
+    $self->textviewer($win);
+}
+
+sub do_info {
+    my $self = shift;
+    my $text = $self->info;
+    $self->title("Target: $self->{target} " . menu_key_hint);
+    $self->textviewer($self->win1->add("text", "TextViewer", -text => $text));
+}
+
+sub prompt_for_target {
+    my $self = shift;
+    $self->{target} = $self->cui->question("Target?");
 }
 
 sub info {
     my $self = shift;
     my $response = $self->get('/info/');
-    return "Request error: " . YAML::Dump($response)
+    return "Request error: " . YAML::XS::Dump($response)
         unless $response->is_success; 
-    YAML::Dump(decode_json($response->content))
+    YAML::XS::Dump(decode_json($response->content))
 }
 
 sub get {
@@ -71,22 +142,6 @@ sub get {
 
 sub agent_string {
     'Stackrad ... UserAgent is a TODO';
-}
-
-sub run {
-    my $self = shift;
-    $self->texteditor->focus();
-    $self->cui->mainloop();
-}
-
-sub exit_dialog() {
-    my $self = shift;
-    my $return = $self->cui->dialog(
-      -message   => "Do you really want to quit?",
-      -title     => "Are you sure???", 
-      -buttons   => ['yes', 'no'],
-    );
-    exit(0) if $return;
 }
 
 sub build_menu {
