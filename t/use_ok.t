@@ -1,3 +1,3 @@
 use Test::More tests => 1;
 
-use_ok 'Stackrad';
+use_ok 'Stackato::Stackrad';

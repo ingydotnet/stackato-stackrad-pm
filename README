@@ -1,5 +1,5 @@
 NAME
-    Stackrad - Curses Client for Stackato
+    Stackato::Stackrad - Curses Client for Stackato
 
 AUTHOR
     Ingy döt Net <ingy@ingy.net>
