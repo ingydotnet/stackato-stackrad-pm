@@ -41,7 +41,8 @@ use constant main_color => 'cyan';
 use constant secondary_color => 'cyan';
 use constant accent_color => 'red';
 
-has targets => (default => sub{[{hostname=>'api.stacka.to'}]});
+has targets => (default => sub{[]});
+# has targets => (default => sub{[{hostname=>'api.stacka.to'}]});
 
 has target_index => ();
 has cui => ();
@@ -153,6 +154,9 @@ sub setup_cui {
     $cui->set_binding(sub { $self->prompt_for_target }, "\cT");
     $cui->set_binding(sub { $self->delete_current_target }, "\cX");
     $cui->set_binding(sub { $self->login_logout }, "\cL");
+    for my $index (1 .. 9) {
+        $cui->set_binding(sub { $self->set_target($index) }, $index);
+    }
 
     my $win1 = $self->{win1} =
         $cui->add('win1', 'Window',
@@ -199,6 +203,12 @@ sub current_target {
     my $self = shift;
     return unless defined $self->target_index;
     $self->targets->[$self->target_index]
+}
+
+sub set_target {
+    my ($self, $new_index) = @_;
+    $self->target_index($new_index);
+    $self->update_users;
 }
 
 sub prompt_for_target {
@@ -381,7 +391,8 @@ sub get {
 sub ua {
     my $self = shift;
     my $ua = LWP::UserAgent->new(agent => user_agent_string);
-    warn "Stackrad being lazy and disabling SSL cert verification!";
+    # XXX
+    # warn "Stackrad being lazy and disabling SSL cert verification!";
     $ua->ssl_opts(
         verify_hostname => 0,
         #? SSL_ca_path => '/app/fs/pair/certcert/stackato.ddns.us.pem',
