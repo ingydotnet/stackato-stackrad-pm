@@ -72,54 +72,44 @@ sub run {
 
 sub setup_cui {
     my $self = shift;
-    my $cui = $self->{cui} = $self->cui(Curses::UI->new(-color_support => 1));
+    my $cui = $self->{cui} = $self->cui(
+        Curses::UI->new(
+            -color_support => 1,
+            # -debug => 1,
+        )
+    );
+    $cui->set_binding(sub { exit 0 }, "\cC");
     my $win1 = $self->{win1} =
         $cui->add('win1', 'Window',
             -title  => default_title,
             -bfg    => main_color,
             -border => 1,
         );
-    my @buttons = ();
+#     $win1->add('help_text', 'Label',
+#         -y     => $win1->height - 30,
+#         -width => $win1->width - 10,
+#         -text  => 'PgUp/PgDn to switch tabs; Ctrl+C to exit',
+#         -textalignment => 'middle',
+#         -bold  => 1,
+#     );
+    my $notebook = $win1->add('notebook', 'Notebook',
+        -height => $win1->height - 2,
+        -border => 1,
+    );
+    my @pages;
     for my $tab (@{$self->ui}) {
         my $name = $tab->{name};
         my $id = 'tab_'.$name;
-        my ($hotkey) = $name =~ /(.)/;
-        my $hackyhotkey = eval "\\c$hotkey"; # XXX eval = ☹. Also, I want Alt.
-        $tab->{win} = $cui->add($id, 'Window',
-            -title => $name,
-            -border       => 1, 
-            -titlereverse => 0, 
-            
-            -padtop       => 4, 
-            -padbottom    => 1, 
-            -padleft      => 1, 
-            -padright     => 1, 
-            -ipad         => 1,
-        );
-        $tab->{label} = $tab->{win}->add('test'.$id, 'Label',
+        my $page = $notebook->add_page($name);
+        $page->add(
+            $id, 'TextViewer',
+            -x    => 1,
+            -y    => 1,
             -text => $tab->{contents},
         );
-        my $action = sub { $tab->{win}->focus };
-        # XXX Grr... why in the world is this giving the last $name for all?
-        $self->cui->set_binding(sub { warn $name }, $hackyhotkey);
-        # $self->cui->set_binding($action, $hackyhotkey);
-        push @buttons, {
-            -label => $name,
-            -onpress => $action,
-        };
+        push @pages, $page;
     }
-    $win1->add('buttons', 'Buttonbox',
-        -y => 1,
-        -buttons => \@buttons,
-    );
-    $self->ui->[0]{win}->focus;
-    $cui->set_binding(sub {exit 0}, "\cC");
-}
-
-sub switch_to {
-    my $self = shift;
-    my $new_page = shift;
-    die $new_page
+    $notebook->focus;
 }
 
 sub prompt_for_target {
