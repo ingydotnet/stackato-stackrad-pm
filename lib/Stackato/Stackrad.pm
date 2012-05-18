@@ -9,6 +9,7 @@ package Stackato::Stackrad;
 use Mo qw'build builder default';
 use Curses::UI 0;
 use LWP::UserAgent 0;
+use LWP::Protocol::https 0;
 use HTTP::Request 0;
 use JSON::XS 0;
 use YAML::XS 0;
@@ -22,7 +23,7 @@ our $SELF;
 sub PPP {
     my $self = $SELF;
     my $text = YAML::XS::Dump(@_);
-    $self->cui->error($text);
+    $self->error($text);
     wantarray ? @_ : $_[0]
 }
 
@@ -184,6 +185,9 @@ sub prompt_for_target {
     my $self = shift;
     my $answer = $self->cui->question(new_target_prompt);
     return unless $answer;
+
+    return $self->error($answer . " does not appear to be a valid Stackato VM")
+        unless $self->validate_target($answer);
     push @{$self->targets}, $answer;
     $self->target_index($#{$self->targets});
     $self->update_targets_screen;
@@ -213,8 +217,8 @@ sub update_targets_screen {
     $out .= "\nPress 'Ctrl+t' to add a target.";
     $out .= "\n\nPress 'Ctrl+x' to delete current target."
         if @{$self->targets};
-    $out .= "\n\nPress 'Ctrl+<target #>' to set current target."
-        if @{$self->targets};
+#     $out .= "\n\nPress 'Ctrl+<target #>' to set current target."
+#         if @{$self->targets} > 1;
     $tab->{tv}{-text} = $out;
     $self->win1->draw(1);
 }
@@ -225,34 +229,31 @@ sub set_title {
     $self->win1->draw(1);
 }
 
-sub do_info {
-    my $self = shift;
-    my $text = $self->request_info;
-    $self->win1->add("text", "TextViewer", -text => $text);
+sub validate_target {
+    my ($self, $target) = @_;
+    my $response = $self->get_from_target($target, '/info/');
+    return unless $response->is_success; 
+    decode_json($response->content)
 }
 
-sub request_info {
-    my $self = shift;
-    my $response = $self->get('/info/');
-    return "Request error: " . YAML::XS::Dump($response)
-        unless $response->is_success; 
-    YAML::XS::Dump(decode_json($response->content))
-}
-
-sub get {
-    my ($self, $path) = @_;
+sub get_from_target {
+    my ($self, $target, $path) = @_;
     my $ua = LWP::UserAgent->new(agent => user_agent_string);
     warn "Stackrad being lazy and disabling SSL cert verification!";
     $ua->ssl_opts(
         verify_hostname => 0,
         #? SSL_ca_path => '/app/fs/pair/certcert/stackato.ddns.us.pem',
     );
-    my $server = $self->current_target;
-    my $request = HTTP::Request->new('GET', 'https://'.$server.$path);
+    my $request = HTTP::Request->new('GET', 'https://'.$target.$path);
     $request->header('Accept' => 'application/json');
     #? cookies?
     #? $request->header( 'Content-Type' => $p{type} )     if $p{type};
     $ua->simple_request($request)
+}
+
+sub error {
+    my $self = shift;
+    $self->cui->error(@_);
 }
 
 1;
