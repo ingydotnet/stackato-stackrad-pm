@@ -12,10 +12,10 @@ use LWP::UserAgent 0;
 use HTTP::Request 0;
 use JSON::XS 0;
 use YAML::XS 0;
-use XXX;
+# use XXX;
 our $VERSION;
 BEGIN {
-    $VERSION = '0.10';
+    $VERSION = '0.01';
 }
 
 our $SELF;
@@ -129,9 +129,12 @@ sub setup_cui {
             # -debug => 1,
         )
     );
+
     $cui->set_binding(sub { exit 0 }, "\cC");
     $cui->set_binding(sub { $self->prompt_for_target }, "\cT");
     $cui->set_binding(sub { $self->delete_current_target }, "\cX");
+    $cui->set_binding(sub { PPP @_ }, "\c1");
+
     my $win1 = $self->{win1} =
         $cui->add('win1', 'Window',
             -title  => default_title,
@@ -209,6 +212,8 @@ sub update_targets_screen {
     }
     $out .= "\nPress 'Ctrl+t' to add a target.";
     $out .= "\n\nPress 'Ctrl+x' to delete current target."
+        if @{$self->targets};
+    $out .= "\n\nPress 'Ctrl+<target #>' to set current target."
         if @{$self->targets};
     $tab->{tv}{-text} = $out;
     $self->win1->draw(1);
