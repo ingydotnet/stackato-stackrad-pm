@@ -7,8 +7,6 @@
 
 package Stackrad;
 use Mo qw'build builder default';
-use Stackrad::State;
-use Stackrad::Menu;
 use Curses::UI 0;
 use LWP::UserAgent 0;
 use HTTP::Request 0;
@@ -25,13 +23,45 @@ use constant new_target_prompt =>
     "New target? (e.g., api.stackato.example.com)";
 use constant user_agent_string =>
     "Stackrad/" . VERSION . " lwp/$LWP::UserAgent::VERSION";
-use constant main_color => 'blue';
-use constant secondary_color => 'red';
-
+use constant main_color => 'cyan';
+use constant secondary_color => 'cyan';
+use constant accent_color => 'red';
 
 has cui => ();
 has win1 => ();
-has textviewers => (default => sub { {} }); # XXX can it work without sub {}?
+has tabs => ();
+has ui => (default => sub { [ 
+    {
+        name => 'Targets',
+        contents => <<'EOT'
+   1) api.stackato1.ddns.us (not logged in)
+ * 2) api.stackato2.ddns.us ingy@ingy.net
+   3) api.stackato3.ddns.us ingy@activestate.com
+   4) api.stackato4.ddns.us (not logged in)
+
+Press 'ctl-t' to add a target.
+EOT
+    },
+    {
+        name => 'Overview',
+        contents => <<EOT
+ ...Overview...
+EOT
+    },
+    {
+        name => 'Users',
+        contents => <<EOT
+  ...Users...
+EOT
+    },
+    {
+        name => 'Groups',
+        contents => <<EOT
+   ...Groups...
+EOT
+    }
+]});
+
 
 sub run {
     my $class = shift;
@@ -42,51 +72,55 @@ sub run {
 
 sub setup_cui {
     my $self = shift;
-    my $cui = $self->{cui} =
-        $self->cui(Curses::UI->new(-color_support => 1));
+    my $cui = $self->{cui} = $self->cui(Curses::UI->new(-color_support => 1));
     my $win1 = $self->{win1} =
-        $self->cui->add('win1', 'Window',
+        $cui->add('win1', 'Window',
             -title  => default_title,
             -bfg    => main_color,
             -border => 1,
-            -y      => 1,
         );
-    my $menu = $self->cui->add(
-        'menu','Menubar', 
-        -menu => [
-            {
-            -label   => 'View',
-            -submenu => [
-            {
-                -label => 'Targets',
-                -value => sub { $_[0]->switch_to('targets') },
-            },
-            {
-                -label => 'Overview',
-                -value => sub { $_[0]->switch_to('overview') },
-            },
-            {
-                -label => 'Users',
-                -value => sub { $_[0]->switch_to('users') },
-            },
-            {
-                -label => 'Groups',
-                -value => sub { $_[0]->switch_to('groups') },
-            },
-        ]}
-        ],
-        # Stackrad::Menu->new->menu,
-        -fg  => "blue",
+    my @buttons = ();
+    for my $tab (@{$self->ui}) {
+        my $name = $tab->{name};
+        my $id = 'tab_'.$name;
+        my ($hotkey) = $name =~ /(.)/;
+        my $hackyhotkey = eval "\\c$hotkey"; # XXX eval = ☹. Also, I want Alt.
+        $tab->{win} = $cui->add($id, 'Window',
+            -title => $name,
+            -border       => 1, 
+            -titlereverse => 0, 
+            
+            -padtop       => 4, 
+            -padbottom    => 1, 
+            -padleft      => 1, 
+            -padright     => 1, 
+            -ipad         => 1,
+        );
+        $tab->{label} = $tab->{win}->add('test'.$id, 'Label',
+            -text => $tab->{contents},
+        );
+        my $action = sub { $tab->{win}->focus };
+        # XXX Grr... why in the world is this giving the last $name for all?
+        $self->cui->set_binding(sub { warn $name }, $hackyhotkey);
+        # $self->cui->set_binding($action, $hackyhotkey);
+        push @buttons, {
+            -label => $name,
+            -onpress => $action,
+        };
+    }
+    $win1->add('buttons', 'Buttonbox',
+        -y => 1,
+        -buttons => \@buttons,
     );
-
-    $self->cui->set_binding(sub {$menu->focus()}, "\cX");
-    $self->cui->set_binding(sub {exit 0}, "\cC");
+    $self->ui->[0]{win}->focus;
+    $cui->set_binding(sub {exit 0}, "\cC");
 }
 
-
-# - User types: stackrad
-# - User gets prompted for a target
-# - User goes to Overview Pane
+sub switch_to {
+    my $self = shift;
+    my $new_page = shift;
+    die $new_page
+}
 
 sub prompt_for_target {
     my $self = shift;
