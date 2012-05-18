@@ -23,7 +23,7 @@ sub PPP {
     my $self = $SELF;
     my $text = YAML::XS::Dump(@_);
     $self->cui->error($text);
-    @_
+    wantarray ? @_ : $_[0]
 }
 
 use constant app_name => 'Stackrad';
@@ -38,7 +38,8 @@ use constant secondary_color => 'cyan';
 use constant accent_color => 'red';
 
 has targets => (default => sub{[]});
-has current_target_index => (default => sub{undef});
+
+has target_index => ();
 has cui => ();
 has win1 => ();
 has tabs => ();
@@ -130,6 +131,7 @@ sub setup_cui {
     );
     $cui->set_binding(sub { exit 0 }, "\cC");
     $cui->set_binding(sub { $self->prompt_for_target }, "\cT");
+    $cui->set_binding(sub { $self->delete_current_target }, "\cX");
     my $win1 = $self->{win1} =
         $cui->add('win1', 'Window',
             -title  => default_title,
@@ -171,8 +173,8 @@ sub tab_named {
 
 sub current_target {
     my $self = shift;
-    return undef unless defined $self->current_target_index;
-    $self->targets->[$self->current_target_index]
+    return unless defined $self->target_index;
+    $self->targets->[$self->target_index]
 }
 
 sub prompt_for_target {
@@ -180,9 +182,20 @@ sub prompt_for_target {
     my $answer = $self->cui->question(new_target_prompt);
     return unless $answer;
     push @{$self->targets}, $answer;
-    $self->current_target_index($#{$self->targets});
+    $self->target_index($#{$self->targets});
     $self->update_targets_screen;
     $self->set_title
+}
+
+sub delete_current_target {
+    my $self = shift;
+    my $i = $self->target_index;
+    return unless defined $i;
+    splice @{$self->targets}, $i, 1;
+    $i = undef if --$i < 0;
+    $self->target_index($i);
+    $self->set_title;
+    $self->update_targets_screen;
 }
 
 sub update_targets_screen {
@@ -191,13 +204,14 @@ sub update_targets_screen {
     my $tab = $self->tab_named('Targets');
     my $out = '';
     for (0 .. $#{$self->targets}) {
-        $out .= $_ == $self->current_target_index ? ' * ' : '   ';
+        $out .= $_ == $self->target_index ? ' * ' : '   ';
         $out .= $self->targets->[$_] . "\n";
     }
     $out .= "\nPress 'Ctrl+t' to add a target.";
-    $out .= "\n\nPress 'Ctrl+d' to delete current target."
+    $out .= "\n\nPress 'Ctrl+x' to delete current target."
         if @{$self->targets};
     $tab->{tv}{-text} = $out;
+    $self->win1->draw(1);
 }
 
 sub set_title {
