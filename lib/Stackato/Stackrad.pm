@@ -188,8 +188,12 @@ sub prompt_for_target {
 sub update_targets_screen {
     my $self = shift;
     my $tab = $self->tab_named('Targets');
-    $tab->{tv}{-text} =
-        YAML::XS::Dump($self->targets) . "\n" . target_help_text;
+    my $out = '';
+    for (0 .. $#{$self->targets}) {
+        $out .= $_ == $self->current_target_index ? ' * ' : '   ';
+        $out .= $self->targets->[$_] . "\n";
+    }
+    $tab->{tv}{-text} = $out . "\n" . target_help_text;
 }
 
 sub set_title {
