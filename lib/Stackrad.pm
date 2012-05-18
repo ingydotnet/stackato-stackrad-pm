@@ -39,7 +39,7 @@ has ui => (default => sub { [
    3) api.stacka.to ingy@activestate.com
    4) stackato-p8ae.local (not logged in)
 
-Press 'ctl-t' to add a target.
+Press 'Ctrl+t' to add a target.
 EOT
     },
     {
