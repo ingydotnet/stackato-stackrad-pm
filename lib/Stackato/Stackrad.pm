@@ -14,10 +14,10 @@ use HTTP::Request 0;
 use URI::Escape 0;
 use JSON::XS 0;
 use YAML::XS 0;
-use XXX;
+# use XXX;
 our $VERSION;
 BEGIN {
-    $VERSION = '0.01';
+    $VERSION = '0.02';
 }
 
 our $SELF;

@@ -5,3 +5,7 @@ Target: api.stackato.ddns.us
 - Other actions
 - Automatic feature comparison? (e.g., check against `s`)
 - …more.
+- Disallow duplicate targets
+- Verbose validate_target errors
+- Only use ^L/^x/^t from Targets screen.
+- Password: ****
