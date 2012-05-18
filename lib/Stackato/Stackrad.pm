@@ -41,7 +41,7 @@ use constant main_color => 'cyan';
 use constant secondary_color => 'cyan';
 use constant accent_color => 'red';
 
-has targets => (default => sub{[{url=>'api.stacka.to'}]});
+has targets => (default => sub{[{hostname=>'api.stacka.to'}]});
 
 has target_index => ();
 has cui => ();
@@ -192,7 +192,7 @@ sub prompt_for_target {
 
     return $self->error($answer . " does not appear to be a valid Stackato VM")
         unless $self->validate_target($answer);
-    push @{$self->targets}, {url => $answer};
+    push @{$self->targets}, {hostname => $answer};
     $self->target_index($#{$self->targets});
     $self->update_targets_screen;
     $self->set_title
@@ -217,7 +217,7 @@ sub update_targets_screen {
     for (0 .. $#{$self->targets}) {
         my $target = $self->targets->[$_];
         $out .= $_ == $self->target_index ? ' * ' : '   ';
-        $out .= $target->{url};
+        $out .= $target->{hostname};
         $out .= $target->{user}
             ? " (${\$target->{user}}) "
             : " (not logged in) ";
@@ -272,8 +272,7 @@ sub validate_target {
 
 sub post {
     my ($self, $path, $data) = @_;
-    # XXX "hostname", not "url"
-    $self->post_to_target($self->current_target->{url}, $path, $data)
+    $self->post_to_target($self->current_target->{hostname}, $path, $data)
 }
 
 sub post_to_target {
@@ -283,7 +282,7 @@ sub post_to_target {
 
 sub get {
     my ($self, $path, $data) = @_;
-    $self->get_from_target($self->current_target->{url}, $path, $data)
+    $self->get_from_target($self->current_target->{hostname}, $path, $data)
 }
 
 sub get_from_target {
