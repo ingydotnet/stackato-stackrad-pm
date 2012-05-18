@@ -34,10 +34,10 @@ has ui => (default => sub { [
     {
         name => 'Targets',
         contents => <<'EOT'
-   1) api.stackato1.ddns.us (not logged in)
+   1) api.stackato.ddns.us (not logged in)
  * 2) api.stackato2.ddns.us ingy@ingy.net
-   3) api.stackato3.ddns.us ingy@activestate.com
-   4) api.stackato4.ddns.us (not logged in)
+   3) api.stacka.to ingy@activestate.com
+   4) stackato-p8ae.local (not logged in)
 
 Press 'ctl-t' to add a target.
 EOT
@@ -79,6 +79,7 @@ sub setup_cui {
         )
     );
     $cui->set_binding(sub { exit 0 }, "\cC");
+    $cui->set_binding(sub { $self->prompt_for_target }, "\cT");
     my $win1 = $self->{win1} =
         $cui->add('win1', 'Window',
             -title  => default_title,
@@ -115,6 +116,13 @@ sub setup_cui {
 sub prompt_for_target {
     my $self = shift;
     $self->{target} = $self->cui->question(new_target_prompt);
+    $self->set_title;
+}
+
+sub set_title {
+    my $self = shift;
+    $self->win1->{-title} = app_name . ' - target: ' . $self->{target};
+    $self->win1->draw(1);
 }
 
 sub do_info {
