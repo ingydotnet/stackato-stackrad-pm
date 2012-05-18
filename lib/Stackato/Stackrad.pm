@@ -240,11 +240,14 @@ sub login {
     my $self = shift;
     my $username = $self->cui->question(username_prompt); # TODO: <prev-user>
     return unless $username;
-    my $password = $self->cui->question(password_prompt); # TODO: <prev-user>
+    my $password = $self->cui->question(password_prompt);
     return unless $password;
     my $path = '/users/' . uri_escape($username) . '/tokens';
     $password = quotemeta($password);
-    my $response = $self->post($path, qq({"password":"$password"}));
+    my $response = $self->post(
+        path => $path,
+        content => qq({"password":"$password"})
+    );
     return $self->error("Couldn't login.") unless $response->is_success; 
     my $token = decode_json($response->content)->{token};
     $self->current_target->{user} = $username;
@@ -265,29 +268,60 @@ sub set_title {
 
 sub validate_target {
     my ($self, $target) = @_;
-    my $response = $self->get_from_target($target, '/info/');
+    my $response = $self->get_from_target(
+        target => { hostname => $target },
+        path => '/info/'
+    );
     return unless $response->is_success; 
     decode_json($response->content)
 }
 
-sub post {
-    my ($self, $path, $data) = @_;
-    $self->post_to_target($self->current_target->{hostname}, $path, $data)
-}
-
 sub post_to_target {
-    my ($self, $target, $path, $data) = @_;
-    $self->ua->simple_request($self->http_req('POST', $target, $path, $data))
+    my ($self, %args) = @_;
+    $self->ua->simple_request(
+        $self->http_req('POST',
+            host => $args{target}{hostname},
+            path => $args{path},
+            headers => {
+                $args{target}{token}
+                ? ('AUTHORIZATION' => $args{target}{token}) : ()
+            },
+            content => $args{content},
+        )
+    )
 }
 
-sub get {
-    my ($self, $path, $data) = @_;
-    $self->get_from_target($self->current_target->{hostname}, $path, $data)
+sub post {
+    my ($self, %args) = @_;
+    $self->post_to_target(
+        target => $self->current_target,
+        path => $args{path},
+        content => $args{content},
+    )
 }
 
 sub get_from_target {
-    my ($self, $target, $path, $data) = @_;
-    $self->ua->simple_request($self->http_req('GET', $target, $path, $data))
+    my ($self, %args) = @_;
+    $self->ua->simple_request(
+        $self->http_req('GET',
+            host => $args{target}{hostname},
+            path => $args{path},
+            headers => {
+                $args{target}{token}
+                ? ('AUTHORIZATION' => $args{target}{token}) : ()
+            },
+            content => $args{content},
+        )
+    )
+}
+
+sub get {
+    my ($self, %args) = @_;
+    $self->get_from_target(
+        target => $self->current_target,
+        path => $args{path},
+        content => $args{content},
+    )
 }
 
 sub ua {
@@ -302,10 +336,11 @@ sub ua {
 }
 
 sub http_req {
-    my ($self, $method, $host, $path, $content) = @_;
-    my $request = HTTP::Request->new($method, 'https://'.$host.$path);
-    $request->header('Accept' => 'application/json'); # Move to     ^
-    $request->content($content) if $content;
+    my ($self, $method, %args) = @_;
+    my $url = "https://$args{host}$args{path}";
+    my $request = HTTP::Request->new($method, $url);
+    $request->header('Accept' => 'application/json', %{$args{headers}});
+    $request->content($args{content}) if $args{content};
     $request
 }
 
