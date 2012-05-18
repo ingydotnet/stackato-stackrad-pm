@@ -31,7 +31,6 @@ use constant target_key_hint => ' (set target with Ctrl+t)';
 use constant default_title => app_name . target_key_hint;
 use constant new_target_prompt =>
     "New target? (e.g., api.stackato.example.com)";
-use constant target_help_text => "Press 'Ctrl+t' to add a target.";
 use constant user_agent_string =>
     app_name . "/$VERSION lwp/$LWP::UserAgent::VERSION";
 use constant main_color => 'cyan';
@@ -46,7 +45,7 @@ has tabs => ();
 has ui => (default => sub { [ 
     {
         name => 'Targets',
-        contents => target_help_text,
+        contents => undef,
     },
     {
         name => 'Overview',
@@ -159,6 +158,7 @@ sub setup_cui {
             -text => $tab->{contents},
         );
     }
+    $self->update_targets_screen;
     $notebook->focus;
 }
 
@@ -187,13 +187,17 @@ sub prompt_for_target {
 
 sub update_targets_screen {
     my $self = shift;
+
     my $tab = $self->tab_named('Targets');
     my $out = '';
     for (0 .. $#{$self->targets}) {
         $out .= $_ == $self->current_target_index ? ' * ' : '   ';
         $out .= $self->targets->[$_] . "\n";
     }
-    $tab->{tv}{-text} = $out . "\n" . target_help_text;
+    $out .= "\nPress 'Ctrl+t' to add a target.";
+    $out .= "\n\nPress 'Ctrl+d' to delete current target."
+        if @{$self->targets};
+    $tab->{tv}{-text} = $out;
 }
 
 sub set_title {
