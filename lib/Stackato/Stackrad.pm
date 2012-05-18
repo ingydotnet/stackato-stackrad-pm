@@ -275,35 +275,39 @@ sub post {
     # XXX "hostname", not "url"
     $self->post_to_target($self->current_target->{url}, $path, $data)
 }
+
 sub post_to_target {
     my ($self, $target, $path, $data) = @_;
-    my $ua = LWP::UserAgent->new(agent => user_agent_string);
-    warn "Stackrad being lazy and disabling SSL cert verification!";
-    $ua->ssl_opts(
-        verify_hostname => 0,
-        #? SSL_ca_path => '/app/fs/pair/certcert/stackato.ddns.us.pem',
-    );
-    my $request = HTTP::Request->new('POST', 'https://'.$target.$path);
-    $request->header('Accept' => 'application/json');
-    $request->content($data);
-    #? cookies?
-    #? $request->header( 'Content-Type' => $p{type} )     if $p{type};
-    $ua->simple_request($request)
+    $self->ua->simple_request($self->http_req('POST', $target, $path, $data))
+}
+
+sub get {
+    my ($self, $path, $data) = @_;
+    $self->get_from_target($self->current_target->{url}, $path, $data)
 }
 
 sub get_from_target {
-    my ($self, $target, $path) = @_;
+    my ($self, $target, $path, $data) = @_;
+    $self->ua->simple_request($self->http_req('GET', $target, $path, $data))
+}
+
+sub ua {
+    my $self = shift;
     my $ua = LWP::UserAgent->new(agent => user_agent_string);
     warn "Stackrad being lazy and disabling SSL cert verification!";
     $ua->ssl_opts(
         verify_hostname => 0,
         #? SSL_ca_path => '/app/fs/pair/certcert/stackato.ddns.us.pem',
     );
-    my $request = HTTP::Request->new('GET', 'https://'.$target.$path);
-    $request->header('Accept' => 'application/json');
-    #? cookies?
-    #? $request->header( 'Content-Type' => $p{type} )     if $p{type};
-    $ua->simple_request($request)
+    $ua
+}
+
+sub http_req {
+    my ($self, $method, $host, $path, $content) = @_;
+    my $request = HTTP::Request->new($method, 'https://'.$host.$path);
+    $request->header('Accept' => 'application/json'); # Move to     ^
+    $request->content($content) if $content;
+    $request
 }
 
 sub error {
