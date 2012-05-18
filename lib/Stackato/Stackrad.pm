@@ -14,7 +14,7 @@ use HTTP::Request 0;
 use URI::Escape 0;
 use JSON::XS 0;
 use YAML::XS 0;
-# use XXX;
+use XXX;
 our $VERSION;
 BEGIN {
     $VERSION = '0.01';
@@ -50,10 +50,12 @@ has tabs => ();
 has ui => (default => sub { [ 
     {
         name => 'Targets',
+        on_activate => sub { },
         contents => undef,
     },
     {
         name => 'Overview',
+        on_activate => sub { },
         contents => <<'EOT'
 Memory: [ 128 MB of 256 MB ]
 [----------------                  ]
@@ -79,6 +81,7 @@ EOT
     },
     {
         name => 'Users',
+        on_activate => sub { $SELF->update_users },
         contents => <<'EOT'
 [ ] ingy@activestate.com
 [ ] ingy@ingy.net
@@ -87,6 +90,7 @@ EOT
     },
     {
         name => 'Groups',
+        on_activate => sub { },
         contents => <<'EOT'
     Group   Users   Apps
 [ ] pair    5       1
@@ -94,6 +98,7 @@ EOT
     },
     {
         name => 'App Store',
+        on_activate => sub { },
         contents => <<'EOT'
 [ ] Bugzilla - perl / mysql
     A bug tracking system for individuals or groups of developers
@@ -116,6 +121,7 @@ EOT
     },
     {
         name => 'Local Apps',
+        on_activate => sub { },
         contents => <<'EOT'
 [ ] Node Env - node
     /home/ingy/src/node-env/
@@ -170,7 +176,9 @@ sub setup_cui {
     for my $tab (@{$self->ui}) {
         my $name = $tab->{name};
         my $id = 'tab_'.$name;
-        my $page = $tab->{page} = $notebook->add_page($name);
+        my $page = $tab->{page} = $notebook->add_page($name,
+            -on_activate => $tab->{on_activate}
+        );
         $tab->{tv} = $page->add(
             $id, 'TextViewer',
             -x    => 1,
@@ -221,7 +229,6 @@ sub delete_current_target {
 
 sub update_targets_screen {
     my $self = shift;
-
     my $tab = $self->tab_named('Targets');
     my $out = '';
     for (0 .. $#{$self->targets}) {
@@ -243,6 +250,26 @@ sub update_targets_screen {
 #         if @{$self->targets} > 1;
     $tab->{tv}{-text} = $out;
     $self->redraw;
+}
+
+sub update_users {
+    my $self = shift;
+    my $out = '';
+    my $response = $self->get(path => '/users');
+    if ($response->is_success) {
+        my $data = decode_json($response->content);
+        for (0 .. $#{$data}) {
+            my $user = $data->[$_];
+            $out .= $_+1 . '. ' . $user->{email} . "\n";
+        }
+    } else {
+        $out = "Users unavailable.";
+        $out .= ' You must first login to a target.'
+            unless $self->current_target;
+        PPP $response;
+        # TODO - what else can we say at this point for diagnosis?
+    }
+    $self->tab_named('Users')->{tv}{-text} = $out;
 }
 
 sub login_logout {
