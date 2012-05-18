@@ -114,6 +114,16 @@ EOT
 [ ] ...
 EOT
     },
+    {
+        name => 'Local Apps',
+        contents => <<'EOT'
+[ ] Node Env - node
+    /home/ingy/src/node-env/
+
+[ ] Foozle - ruby / postgresql
+    /home/ingy/src/foozle/
+EOT
+    },
 ]});
 
 
@@ -225,8 +235,7 @@ sub update_targets_screen {
     }
     $out .= "\n\n";
     if (@{$self->targets}) {
-        $out .= "Ctrl+L to login.\n"
-            unless $self->logged_in;
+        $out .= 'Ctrl+L to log' . ($self->logged_in ? 'out' : 'in')."\n";
         $out .= "Ctrl+x to delete current target.\n"
     }
     $out .= "Ctrl+t to add a target.\n";
