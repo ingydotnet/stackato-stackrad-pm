@@ -148,7 +148,7 @@ sub setup_cui {
     $cui->set_binding(sub { exit 0 }, "\cC");
     $cui->set_binding(sub { $self->prompt_for_target }, "\cT");
     $cui->set_binding(sub { $self->delete_current_target }, "\cX");
-    $cui->set_binding(sub { $self->login }, "\cL");
+    $cui->set_binding(sub { $self->login_logout }, "\cL");
 
     my $win1 = $self->{win1} =
         $cui->add('win1', 'Window',
@@ -242,11 +242,12 @@ sub update_targets_screen {
 #     $out .= "\n\nPress 'Ctrl+<target #>' to set current target."
 #         if @{$self->targets} > 1;
     $tab->{tv}{-text} = $out;
-    $self->win1->draw(1);
+    $self->redraw;
 }
 
-sub login {
+sub login_logout {
     my $self = shift;
+    return $self->logout if $self->logged_in;
     my $username = $self->cui->question(username_prompt); # TODO: <prev-user>
     return unless $username;
     my $password = $self->cui->question(password_prompt);
@@ -257,10 +258,21 @@ sub login {
         path => $path,
         content => qq({"password":"$password"})
     );
-    return $self->error("Couldn't login.") unless $response->is_success; 
+    unless ($response->is_success) {
+        $self->error("Couldn't login.");
+        return $self->logout;
+    }
     my $token = decode_json($response->content)->{token};
     $self->current_target->{user} = $username;
     $self->current_target->{token} = $token;
+    $self->update_targets_screen;
+}
+
+sub logout {
+    my $self = shift;
+    my $cur = $self->current_target;
+    delete $cur->{user};
+    delete $cur->{token};
     $self->update_targets_screen;
 }
 
@@ -272,7 +284,7 @@ sub logged_in {
 sub set_title {
     my $self = shift;
     $self->win1->{-title} = app_name . ' - target: ' . $self->current_target;
-    $self->win1->draw(1);
+    $self->redraw;
 }
 
 sub validate_target {
@@ -356,6 +368,11 @@ sub http_req {
 sub error {
     my $self = shift;
     $self->cui->error(@_);
+}
+
+sub redraw {
+    my $self = shift;
+    $self->win1->draw(1);
 }
 
 1;
