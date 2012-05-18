@@ -83,9 +83,7 @@ EOT
         name => 'Users',
         on_activate => sub { $SELF->update_users },
         contents => <<'EOT'
-[ ] ingy@activestate.com
-[ ] ingy@ingy.net
-[ ] as@sharpsaw.org
+You need to login to a valid target Stackato VM.
 EOT
     },
     {
@@ -255,19 +253,21 @@ sub update_targets_screen {
 sub update_users {
     my $self = shift;
     my $out = '';
-    my $response = $self->get(path => '/users');
-    if ($response->is_success) {
-        my $data = decode_json($response->content);
-        for (0 .. $#{$data}) {
-            my $user = $data->[$_];
-            $out .= $_+1 . '. ' . $user->{email} . "\n";
+    if (not $self->current_target) {
+        $out = 'You have no Stackato VM as a current target.';
+    }
+    else {
+        my $response = $self->get(path => '/users');
+        my $status = $response->code;
+        if ($status == 403) {
+            $out = "Unauthorized. Maybe you need to login as an admin user?";
+        } else {
+            my $data = decode_json($response->content);
+            for (0 .. $#{$data}) {
+                my $user = $data->[$_];
+                $out .= $_+1 . '. ' . $user->{email} . "\n";
+            }
         }
-    } else {
-        $out = "Users unavailable.";
-        $out .= ' You must first login to a target.'
-            unless $self->current_target;
-        PPP $response;
-        # TODO - what else can we say at this point for diagnosis?
     }
     $self->tab_named('Users')->{tv}{-text} = $out;
 }
@@ -310,7 +310,13 @@ sub logged_in {
 
 sub set_title {
     my $self = shift;
-    $self->win1->{-title} = app_name . ' - target: ' . $self->current_target;
+    my $title = app_name;
+    $title .= ' - target: ' . (
+        $self->current_target &&
+        $self->current_target->{hostname} ||
+        'No Target'
+    );
+    $self->win1->{-title} = $title;
     $self->redraw;
 }
 
