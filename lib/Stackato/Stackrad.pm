@@ -40,6 +40,20 @@ use constant user_agent_string =>
 use constant main_color => 'cyan';
 use constant secondary_color => 'cyan';
 use constant accent_color => 'red';
+use constant banner => <<EOT;
+        _____                   _              _          _
+       / ____|                 | |            | |        | |
+  ____| O_________          ___| |_  __ _  ___| | __ __ _| |_  ___
+ /     \\___ \\     \\        / __| __|/ _` |/ __| |/ // _` | __|/ _ \\ TM
+|     .____O |     |       \\__ \\ |_| (_| | (__|   <| (_| | |_| (_) |
+ \\_...|_____...___/        |___/\\__|\\__,_|\\___|_|\\_\\\\__,_|\\__|\\___/
+                                                by ActiveState
+                                                
+
+
+
+
+EOT
 
 has targets => (default => sub{[]});
 # has targets => (default => sub{[{hostname=>'api.stacka.to'}]});
@@ -252,6 +266,8 @@ sub update_targets_screen {
     if (@{$self->targets}) {
         $out .= 'Ctrl+L to log' . ($self->logged_in ? 'out' : 'in')."\n";
         $out .= "Ctrl+x to delete current target.\n"
+    } else {
+        $out .= banner;
     }
     $out .= "Ctrl+t to add a target.\n";
 #     $out .= "\n\nPress 'Ctrl+<target #>' to set current target."
