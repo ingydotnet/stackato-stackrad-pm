@@ -44,22 +44,66 @@ EOT
     },
     {
         name => 'Overview',
-        contents => <<EOT
- ...Overview...
+        contents => <<'EOT'
+Memory: [ 128 MB of 256 MB ]
+[----------------                  ]
+
+1 / 2 Applications
+0 / 2 Services
+
+Applications:
+[ ] tty-js [STARTED]
+    Framework: node, Services: 0, Owner: as@sharpsaw.org
+    [Restart] [Stop] [Launch] [Logs] [All Files] [More Info]
+
+[ ] pairup [STARTED]
+    Framework: generic, Services: 0, Owner: ingy@ingy.net
+    [Restart] [Stop] [Launch] [Logs] [All Files] [More Info]
+
+...
+
+Provisioned Services:
+[ ] filesystem  Provisioned Name: home   Bindings: 1
+    [(Cannot Delete Bound Service)]
 EOT
     },
     {
         name => 'Users',
-        contents => <<EOT
-  ...Users...
+        contents => <<'EOT'
+[ ] ingy@activestate.com
+[ ] ingy@ingy.net
+[ ] as@sharpsaw.org
 EOT
     },
     {
         name => 'Groups',
-        contents => <<EOT
-   ...Groups...
+        contents => <<'EOT'
+    Group   Users   Apps
+[ ] pair    5       1
 EOT
-    }
+    },
+    {
+        name => 'App Store',
+        contents => <<'EOT'
+[ ] Bugzilla - perl / mysql
+    A bug tracking system for individuals or groups of developers
+    256MB Required - License: MPL
+    (Third Party Apps for Stackato)
+
+[ ] Currency Converter - python / redis
+    Currency converter using Python bottle framework
+    128MB Required - License: Unknown
+    (ActiveState Stackato Sample Applications)
+
+[ ] Drupal - php / filesystem / mysql
+    A popular PHP content management system which uses mysql and
+    the persistent file system
+    128MB Required - License: GPLv2
+    (Third Party Apps for Stackato)
+
+[ ] ...
+EOT
+    },
 ]});
 
 
