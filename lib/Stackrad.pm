@@ -85,15 +85,15 @@ sub setup_cui {
             -bfg    => main_color,
             -border => 1,
         );
-#     $win1->add('help_text', 'Label',
-#         -y     => $win1->height - 30,
-#         -width => $win1->width - 10,
-#         -text  => 'PgUp/PgDn to switch tabs; Ctrl+C to exit',
-#         -textalignment => 'middle',
-#         -bold  => 1,
-#     );
+    $win1->add('help_text', 'Label',
+        -y     => $win1->height - 3,
+        -width => $win1->width - 2,
+        -text  => 'Ctrl+n/PgUp / Ctrl+p/PgDn to switch tabs; Ctrl+C to exit',
+        -textalignment => 'middle',
+        -bold  => 1,
+    );
     my $notebook = $win1->add('notebook', 'Notebook',
-        -height => $win1->height - 2,
+        -height => $win1->height - 3,
         -border => 1,
     );
     my @pages;
