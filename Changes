@@ -1,4 +1,9 @@
 ---
+version: 0.03
+date:    Thu Jun 19 11:08:40 PDT 2014
+changes:
+- Add dependencies, so tests pass on cpantesters
+---
 version: 0.02
 date:    Fri May 18 21:25:45 UTC 2012
 changes:

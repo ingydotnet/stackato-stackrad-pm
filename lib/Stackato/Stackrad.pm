@@ -1,24 +1,18 @@
-##
-# name:      Stackato::Stackrad
-# abstract:  Curses Client for Stackato
-# author:    Ingy döt Net <ingy@ingy.net>
-# license:   perl
-# copyright: 2012
-
+use strict; use warnings;
 package Stackato::Stackrad;
-use Mo qw'build builder default';
-use Curses::UI 0;
-use LWP::UserAgent 0;
-use LWP::Protocol::https 0;
-use HTTP::Request 0;
-use URI::Escape 0;
-use JSON::XS 0;
-use YAML::XS 0;
-# use XXX;
 our $VERSION;
 BEGIN {
-    $VERSION = '0.02';
+    $VERSION = '0.03';
 }
+
+use Mo qw'build builder default';
+use Curses::UI;
+use LWP::UserAgent;
+use LWP::Protocol::https;
+use HTTP::Request;
+use URI::Escape;
+use JSON::XS;
+use YAML::XS;
 
 our $SELF;
 sub PPP {
