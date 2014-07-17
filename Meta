@@ -1,7 +1,7 @@
 =meta: 0.0.1
 
 name: Stackato-Stackrad
-version: 0.03
+version: 0.04
 abstract: Curses Client for Stackato
 homepage: https://metacpan.org/release/Stackato-Stackrad
 abstract: Curses Client for Stackato
@@ -28,8 +28,8 @@ requires:
   YAML::XS: 0
 
 devel:
-  git: git@github.org/ingydotnet/stackato-stackrad-pm
-  irc: irc.freenode.net/stackato
-  bug: https://github.com/ingydotnet/stackato-stackrad-pm/issues/
+  git: https://github.com/ingydotnet/stackato-stackrad-pm
+  bug: https://github.com/ingydotnet/stackato-stackrad-pm/issues
+  irc: irc.freenode.net#stackato
 
 =travis: perl
