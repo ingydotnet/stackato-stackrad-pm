@@ -1,20 +1,26 @@
-=meta: 0.0.1
+=meta: 0.0.2
 
 name: Stackato-Stackrad
-version: 0.10
+version: 0.11
 abstract: Curses Client for Stackato
 homepage: https://metacpan.org/release/Stackato-Stackrad
 abstract: Curses Client for Stackato
-
+language: perl
 license: perl
 copyright: 2012-2014. Ingy döt Net.
+
 author:
   name: Ingy döt Net
   email: ingy@ingy.net
+  homepage: http://ingy.net
   github: ingydotnet
   twitter: ingydotnet
   freenode: ingy
-  homepage: http://ingy.net
+
+devel:
+  git: https://github.com/ingydotnet/stackato-stackrad-pm
+  bug: https://github.com/ingydotnet/stackato-stackrad-pm/issues
+  irc: irc.freenode.net#stackato
 
 requires:
   perl: 5.8.1
@@ -26,12 +32,3 @@ requires:
   URI::Escape: 0
   JSON::XS: 0
   YAML::XS: 0
-
-devel:
-  git: https://github.com/ingydotnet/stackato-stackrad-pm
-  bug: https://github.com/ingydotnet/stackato-stackrad-pm/issues
-  irc: irc.freenode.net#stackato
-
-=travis:
-  type: perl
-  irc: irc.freenode.net#stackato
