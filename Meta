@@ -1,13 +1,13 @@
 =meta: 0.0.2
 
 name: Stackato-Stackrad
-version: 0.12
+version: 0.13
 abstract: Curses Client for Stackato
 homepage: https://metacpan.org/release/Stackato-Stackrad
 abstract: Curses Client for Stackato
 language: perl
 license: perl
-copyright: 2012-2014. Ingy döt Net.
+copyright: 2012-2014
 
 author:
   name: Ingy döt Net
