@@ -1,4 +1,9 @@
 ---
+version: 0.10
+date:    Sat Aug 16 04:06:00 PDT 2014
+changes:
+- Eliminate spurious trailing whitespace
+---
 version: 0.09
 date:    Fri Aug 15 21:28:30 PDT 2014
 changes:

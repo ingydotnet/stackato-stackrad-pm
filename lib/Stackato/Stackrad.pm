@@ -2,7 +2,7 @@ use strict; use warnings;
 package Stackato::Stackrad;
 our $VERSION;
 BEGIN {
-    $VERSION = '0.09';
+    $VERSION = '0.10';
 }
 
 use Mo qw'build builder default';
@@ -42,7 +42,7 @@ use constant banner => <<EOT;
 |     .____O |     |       \\__ \\ |_| (_| | (__|   <| (_| | |_| (_) |
  \\_...|_____...___/        |___/\\__|\\__,_|\\___|_|\\_\\\\__,_|\\__|\\___/
                                                 by ActiveState
-                                                
+
 
 
 
@@ -56,7 +56,7 @@ has target_index => ();
 has cui => ();
 has win1 => ();
 has tabs => ();
-has ui => (default => sub { [ 
+has ui => (default => sub { [
     {
         name => 'Targets',
         on_activate => sub { },
@@ -346,7 +346,7 @@ sub validate_target {
         target => { hostname => $target },
         path => '/info/'
     );
-    return unless $response->is_success; 
+    return unless $response->is_success;
     decode_json($response->content)
 }
 
