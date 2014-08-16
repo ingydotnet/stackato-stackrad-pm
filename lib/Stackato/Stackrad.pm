@@ -2,7 +2,7 @@ use strict; use warnings;
 package Stackato::Stackrad;
 our $VERSION;
 BEGIN {
-    $VERSION = '0.11';
+    $VERSION = '0.12';
 }
 
 use Mo qw'build builder default';
